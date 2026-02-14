@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aim Trainer Game</title>
+  <style>
+    body { text-align: center; font-family: Arial; background: #f7f7f7; }
+    #gameArea { width: 600px; height: 400px; background: #0d0d0d; margin: 20px auto; position: relative; overflow: hidden; border-radius: 10px; }
+    .target { width: 40px; height: 40px; background: rgb(226, 34, 34); border-radius: 50%; position: absolute; cursor: pointer; }
+    #result { font-size: 1.2em; margin-top: 20px; }
+    #startBtn { padding: 10px 20px; background: #007bff; border: none; color: rgb(102, 222, 81); border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Aim Trainer Game</h1>
+  <button id="startBtn">Start Game</button>
+  <div id="gameArea"></div>
+  <p id="result"></p>
+
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const startBtn = document.getElementById('startBtn');
+    const result = document.getElementById('result');
+
+    let score = 0, total = 0, misses = 0;
+    let reactionTimes = [];
+
+    startBtn.onclick = () => {
+      score = 0; total = 0; misses = 0; reactionTimes = [];
+      result.textContent = '';
+      startGame();
+    };
+
+    function startGame() {
+      spawnTarget();
+      const gameDuration = 30000; // 30 seconds
+      setTimeout(() => endGame(), gameDuration);
+    }
+
+    function spawnTarget() {
+      total++;
+      const target = document.createElement('div');
+      target.classList.add('target');
+      const x = Math.random() * (gameArea.clientWidth - 40);
+      const y = Math.random() * (gameArea.clientHeight - 40);
+      target.style.left = `${x}px`;
+      target.style.top = `${y}px`;
+
+      const appearTime = Date.now();
+      gameArea.appendChild(target);
+
+      target.onclick = () => {
+        const reaction = (Date.now() - appearTime) / 1000;
+        reactionTimes.push(reaction);
+        score++;
+        target.remove();
+        spawnTarget();
+      };
+
+      setTimeout(() => {
+        if (document.body.contains(target)) {
+          target.remove();
+          misses++;
+          spawnTarget();
+        }
+      }, 2000);
+    }
+
+    function endGame() {
+      gameArea.innerHTML = '';
+      const avgReaction = reactionTimes.length > 0
+        ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length
+        : 2.0;
+      const accuracy = (score / total) * 100;
+
+      const playerData = {
+        reaction_time_avg: avgReaction.toFixed(2),
+        accuracy: accuracy.toFixed(2),
+        score: score,
+        misses: misses
+      };
+
+      fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(playerData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        result.innerHTML = `
+          <b>Score:</b> ${score}<br>
+          <b>Accuracy:</b> ${accuracy.toFixed(2)}%<br>
+          <b>Reaction Time:</b> ${avgReaction.toFixed(2)}s<br>
+          <b>Predicted Skill Level:</b> ${data.skill_level}
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
