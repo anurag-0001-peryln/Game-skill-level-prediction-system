@@ -41,5 +41,28 @@ The system uses a **Multinomial Logistic Regression** classifier.
 
 ---
 
-## 🏗️ Project Structure
 
+---
+
+## ⚙️ Installation
+```
+1️⃣ Clone the repository
+git clone https://github.com/yourusername/game-skill-prediction.git
+cd game-skill-prediction
+
+2️⃣ Create virtual environment
+python -m venv venv
+source venv/bin/activate      # Linux / Mac
+venv\Scripts\activate         # Windows
+
+3️⃣ Install dependencies
+pip install flask pandas scikit-learn matplotlib seaborn joblib flask-cors
+
+🏋️ Train the Model
+python train_model.py
+
+🌐 Run the Web Application
+python app.py
+
+Open in browser:
+http://127.0.0.1:5000/
